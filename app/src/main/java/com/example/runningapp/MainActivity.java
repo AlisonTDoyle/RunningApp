@@ -1,5 +1,7 @@
 package com.example.runningapp;
 
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -12,18 +14,17 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.runningapp.StepsHandler.AccelerometerHandler;
+import com.example.runningapp.StepsHandler.IStepsHandler;
+import com.example.runningapp.StepsHandler.StepCounterHandler;
+
 public class MainActivity extends AppCompatActivity {
     // Activity elements
-    TextView stepsTextView;
-    TextView timeTextView;
-
-    Button startButton;
-    Button stopButton;
+    TextView sensorTextView;
 
     // Properties
     long startTime = 0;
-    Handler handler = new Handler();
-    Runnable runnable = SetUpRunnable();
+    IStepsHandler _stepHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,52 +37,36 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Set up sensors
+        SetUpStepHandler();
+
         // Fetch activity elements
-        stepsTextView = findViewById(R.id.stepsTextView);
-        timeTextView = findViewById(R.id.timeTextView);
-        startButton = findViewById(R.id.buttonStart);
-        stopButton = findViewById(R.id.buttonStop);
+        sensorTextView = findViewById(R.id.sensorTextView);
 
         // Event listeners
-        startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                doStart(view);
-            }
-        });
-
-        stopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                doStop(view);
-            }
-        });
+        if (_stepHandler instanceof AccelerometerHandler) {
+            sensorTextView.setText("Accelerometer");
+        } else if (_stepHandler instanceof StepCounterHandler) {
+            sensorTextView.setText("Step Counter");
+        }
     }
 
-    private Runnable SetUpRunnable() {
-        Runnable newRunnable = new Runnable() {
-            @Override
-            public void run() {
-                long milliseconds = System.currentTimeMillis() - startTime;
-                int seconds = (int) (milliseconds/1000);
-                int minutes = seconds/60;
-                seconds = seconds % 60;
+    private void SetUpStepHandler() {
+        SensorManager sensorManager;
+        Sensor stepSensor;
 
-                timeTextView.setText(String.format("%02d:%02d", minutes, seconds));
+        // Set up sensor manager
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-                handler.postDelayed(this, 500);
-            }
-        };
+        // Check for step counter
+        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
-        return  newRunnable;
-    }
-
-    public void doStop(View view) {
-        handler.removeCallbacks(runnable);
-    }
-
-    public void doStart(View view) {
-        startTime = System.currentTimeMillis();
-        handler.postDelayed(runnable, 0);
+        if (stepSensor == null) {
+            // Get accelerometer if step counter does not exist
+            stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            _stepHandler = new AccelerometerHandler(stepSensor);
+        } else {
+            _stepHandler = new StepCounterHandler(stepSensor);
+        }
     }
 }
