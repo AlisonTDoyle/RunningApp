@@ -1,5 +1,12 @@
 package com.example.runningapp.StepsHandler;
 
-public interface IStepsHandler {
+import android.hardware.SensorEventListener;
 
+public interface IStepsHandler {
+    // Methods
+    public void Start();
+
+    public void Pause();
+
+    public int GetStepsTaken();
 }

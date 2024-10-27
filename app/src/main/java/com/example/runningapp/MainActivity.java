@@ -1,8 +1,10 @@
 package com.example.runningapp;
 
 import android.hardware.Sensor;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
@@ -21,9 +23,11 @@ import com.example.runningapp.StepsHandler.StepCounterHandler;
 public class MainActivity extends AppCompatActivity {
     // Activity elements
     TextView sensorTextView;
+    TextView stepTextView;
 
     // Properties
     long startTime = 0;
+    CountDownTimer timerHandler;
     IStepsHandler _stepHandler;
 
     @Override
@@ -39,34 +43,53 @@ public class MainActivity extends AppCompatActivity {
 
         // Set up sensors
         SetUpStepHandler();
+        _stepHandler.Start();
 
         // Fetch activity elements
         sensorTextView = findViewById(R.id.sensorTextView);
+        stepTextView = findViewById(R.id.stepsTextView);
+
+        // Set up timer
+        timerHandler = new CountDownTimer(300000, 1000) {
+            @Override
+            public void onTick(long l) {
+                int steps = _stepHandler.GetStepsTaken();
+                stepTextView.setText(String.valueOf(steps));
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        };
+        timerHandler.start();
 
         // Event listeners
         if (_stepHandler instanceof AccelerometerHandler) {
             sensorTextView.setText("Accelerometer");
         } else if (_stepHandler instanceof StepCounterHandler) {
             sensorTextView.setText("Step Counter");
+        } else {
+            sensorTextView.setText("No sensor available to calculate steps");
         }
     }
 
     private void SetUpStepHandler() {
         SensorManager sensorManager;
-        Sensor stepSensor;
+        Sensor stepSensor = null;
 
         // Set up sensor manager
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         // Check for step counter
-        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+//        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
         if (stepSensor == null) {
             // Get accelerometer if step counter does not exist
             stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            _stepHandler = new AccelerometerHandler(stepSensor);
+            _stepHandler = new AccelerometerHandler(sensorManager, stepSensor);
         } else {
-            _stepHandler = new StepCounterHandler(stepSensor);
+            _stepHandler = new StepCounterHandler(sensorManager, stepSensor);
         }
     }
 }
