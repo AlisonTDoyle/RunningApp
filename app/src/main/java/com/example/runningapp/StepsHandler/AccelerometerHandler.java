@@ -20,20 +20,7 @@ public class AccelerometerHandler implements IStepsHandler, SensorEventListener 
         _accelerometer = accelerometer;
     }
 
-    // Methods
-    @Override
-    public int GetStepsTaken() {
-        return _stepsTaken;
-    }
-
-    public void Start() {
-        _sensorManager.registerListener(this, _accelerometer, 3);
-    }
-
-    public void Pause() {
-        _sensorManager.unregisterListener(this);
-    }
-
+    // Event listeners
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         // Vairables
@@ -60,5 +47,19 @@ public class AccelerometerHandler implements IStepsHandler, SensorEventListener 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    // Methods
+    @Override
+    public int GetStepsTaken() {
+        return _stepsTaken;
+    }
+
+    public void Start() {
+        _sensorManager.registerListener(this, _accelerometer, 3);
+    }
+
+    public void Pause() {
+        _sensorManager.unregisterListener(this);
     }
 }
