@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-
+                _stepHandler.Pause();
             }
         };
         timerHandler.start();
@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Check for step counter
 //        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         if (stepSensor == null) {
             // Get accelerometer if step counter does not exist
