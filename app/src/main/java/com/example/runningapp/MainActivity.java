@@ -16,14 +16,15 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.ekn.gruzer.gaugelibrary.FullGauge;
 import com.example.runningapp.StepsHandler.AccelerometerHandler;
 import com.example.runningapp.StepsHandler.IStepsHandler;
 import com.example.runningapp.StepsHandler.StepCounterHandler;
 
 public class MainActivity extends AppCompatActivity {
     // Activity elements
-    TextView sensorTextView;
     TextView stepTextView;
+    FullGauge timeFullGauge;
 
     // Properties
     long startTime = 0;
@@ -46,8 +47,9 @@ public class MainActivity extends AppCompatActivity {
         _stepHandler.Start();
 
         // Fetch activity elements
-        sensorTextView = findViewById(R.id.sensorTextView);
-        stepTextView = findViewById(R.id.stepsTextView);
+        stepTextView = findViewById(R.id.textviewSteps);
+        timeFullGauge = findViewById(R.id.timeFullGauge);
+        timeFullGauge.setValue(32);
 
         // Set up timer
         timerHandler = new CountDownTimer(300000, 1000) {
@@ -65,13 +67,6 @@ public class MainActivity extends AppCompatActivity {
         timerHandler.start();
 
         // Event listeners
-        if (_stepHandler instanceof AccelerometerHandler) {
-            sensorTextView.setText("Accelerometer");
-        } else if (_stepHandler instanceof StepCounterHandler) {
-            sensorTextView.setText("Step Counter");
-        } else {
-            sensorTextView.setText("No sensor available to calculate steps");
-        }
     }
 
     private void SetUpStepHandler() {
