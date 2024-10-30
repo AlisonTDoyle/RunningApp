@@ -1,13 +1,11 @@
 package com.example.runningapp;
 
 import android.hardware.Sensor;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -16,23 +14,54 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.ekn.gruzer.gaugelibrary.FullGauge;
 import com.example.runningapp.StepsHandler.AccelerometerHandler;
 import com.example.runningapp.StepsHandler.IStepsHandler;
 import com.example.runningapp.StepsHandler.StepCounterHandler;
+import com.google.android.material.color.DynamicColors;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
     // Activity elements
-    TextView sensorTextView;
-    TextView stepTextView;
+    private FullGauge _timeFullGauge;
+    private TextView _stepTextView;
+    private FloatingActionButton _startFab;
+    private FloatingActionButton _stopFab;
+    private ExtendedFloatingActionButton _restartRunExtendedFab;
+    private ExtendedFloatingActionButton _viewRunDetailsExtendedFab;
 
     // Properties
-    long startTime = 0;
-    CountDownTimer timerHandler;
-    IStepsHandler _stepHandler;
+    private int _secondsPassed = 0;
+    private long _startTime = 0;
+
+    private Handler _timerHandler = new Handler();
+    private Runnable _timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // Counter in milliseconds
+            long milliseconds = System.currentTimeMillis() - _startTime;
+
+            // Convert to seconds
+            _secondsPassed = (int)(milliseconds/1000);
+
+            // Display time passed
+            _timeFullGauge.setValue(_secondsPassed);
+
+            // Get steps
+            int steps = _stepHandler.GetStepsTaken();
+            _stepTextView.setText(String.valueOf((int)steps));
+
+            // Timer intervals
+            _timerHandler.postDelayed(this, 500);
+        }
+    };
+    private IStepsHandler _stepHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        DynamicColors.applyToActivityIfAvailable(this);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -46,32 +75,33 @@ public class MainActivity extends AppCompatActivity {
         _stepHandler.Start();
 
         // Fetch activity elements
-        sensorTextView = findViewById(R.id.sensorTextView);
-        stepTextView = findViewById(R.id.stepsTextView);
+        _timeFullGauge = findViewById(R.id.timeFullGauge);
+        _stepTextView = findViewById(R.id.textviewSteps);
+        _startFab = findViewById(R.id.startTimerFab);
+        _stopFab = findViewById(R.id.stopTimerFab);
+        _restartRunExtendedFab = findViewById(R.id.restartRunExtendedFab);
+        _viewRunDetailsExtendedFab = findViewById(R.id.viewRunDetailsExtendedFab);
+        _timeFullGauge.setMaxValue(60);
 
-        // Set up timer
-        timerHandler = new CountDownTimer(300000, 1000) {
-            @Override
-            public void onTick(long l) {
-                int steps = _stepHandler.GetStepsTaken();
-                stepTextView.setText(String.valueOf(steps));
-            }
-
-            @Override
-            public void onFinish() {
-                _stepHandler.Pause();
-            }
-        };
-        timerHandler.start();
+        // Set up elements
+        _stopFab.setEnabled(false);
+        _restartRunExtendedFab.setEnabled(false);
+        _viewRunDetailsExtendedFab.setEnabled(false);
 
         // Event listeners
-        if (_stepHandler instanceof AccelerometerHandler) {
-            sensorTextView.setText("Accelerometer");
-        } else if (_stepHandler instanceof StepCounterHandler) {
-            sensorTextView.setText("Step Counter");
-        } else {
-            sensorTextView.setText("No sensor available to calculate steps");
-        }
+        _startFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                StartTimer();
+            }
+        });
+
+        _stopFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                StopTimer();
+            }
+        });
     }
 
     private void SetUpStepHandler() {
@@ -92,5 +122,23 @@ public class MainActivity extends AppCompatActivity {
         } else {
             _stepHandler = new StepCounterHandler(sensorManager, stepSensor);
         }
+    }
+
+    private void StartTimer() {
+        _startTime = System.currentTimeMillis();
+        _timerHandler.postDelayed(_timerRunnable, 0);
+
+        // Update buttons status
+        _startFab.setEnabled(false);
+        _stopFab.setEnabled(true);
+    }
+
+    private void StopTimer() {
+        _timerHandler.removeCallbacks(_timerRunnable);
+
+        // Update buttons status
+        _startFab.setEnabled(true);
+        _stopFab.setEnabled(false);
+        _viewRunDetailsExtendedFab.setEnabled(true);
     }
 }
