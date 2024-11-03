@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -25,12 +26,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
     // Activity elements
-    private FullGauge _timeFullGauge;
+//    private FullGauge _timeFullGauge;
     private TextView _stepTextView;
+    private TextView _timerTextView;
     private FloatingActionButton _startFab;
     private FloatingActionButton _stopFab;
     private ExtendedFloatingActionButton _restartRunExtendedFab;
     private ExtendedFloatingActionButton _viewRunDetailsExtendedFab;
+    private ProgressBar _timerProgressBar;
 
     // Properties
     private int _secondsPassed = 0;
@@ -47,12 +50,20 @@ public class MainActivity extends AppCompatActivity {
             // Convert to seconds
             _secondsPassed = (int)(milliseconds/1000);
 
-            // Display time passed
-            _timeFullGauge.setValue(_secondsPassed);
-
-            // Get steps
+            // Display steps
             _steps = _stepHandler.GetStepsTaken();
             _stepTextView.setText(String.valueOf(_steps));
+
+            // Display time passed
+            _timerTextView.setText(String.valueOf(_secondsPassed));
+            if (_secondsPassed < 60) {
+                // Increment progressbar
+                _timerProgressBar.setProgress(_secondsPassed);
+            } else {
+                // When progress bar goes above 1 minute, reset display
+                int visualProgress = _secondsPassed % 60;
+                _timerProgressBar.setProgress(visualProgress);
+            }
 
             // Timer intervals
             _timerHandler.postDelayed(this, 500);
@@ -63,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        DynamicColors.applyToActivityIfAvailable(this);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -77,13 +87,14 @@ public class MainActivity extends AppCompatActivity {
         _stepHandler.Start();
 
         // Fetch activity elements
-        _timeFullGauge = findViewById(R.id.timeFullGauge);
         _stepTextView = findViewById(R.id.textviewSteps);
+        _timerTextView = findViewById(R.id.textviewTime);
         _startFab = findViewById(R.id.startTimerFab);
         _stopFab = findViewById(R.id.stopTimerFab);
         _restartRunExtendedFab = findViewById(R.id.restartRunExtendedFab);
         _viewRunDetailsExtendedFab = findViewById(R.id.viewRunDetailsExtendedFab);
-        _timeFullGauge.setMaxValue(60);
+        _timerProgressBar = findViewById(R.id.timerProgressBar);
+        _timerProgressBar.setMax(60);
 
         // Set up elements
         _stopFab.setEnabled(false);
@@ -127,7 +138,6 @@ public class MainActivity extends AppCompatActivity {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         // Check for step counter
-//        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         if (stepSensor == null) {
@@ -146,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
         // Update buttons status
         _startFab.setEnabled(false);
         _stopFab.setEnabled(true);
+        _restartRunExtendedFab.setEnabled(false);
     }
 
     private void StopTimer() {
@@ -155,5 +166,10 @@ public class MainActivity extends AppCompatActivity {
         _startFab.setEnabled(true);
         _stopFab.setEnabled(false);
         _viewRunDetailsExtendedFab.setEnabled(true);
+    }
+
+    private void ResetTimer() {
+        _stepTextView.setText("0");
+        _timerTextView.setText("0");
     }
 }
