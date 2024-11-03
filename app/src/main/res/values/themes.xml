@@ -6,4 +6,5 @@
     </style>
 
     <style name="Theme.RunningApp" parent="Base.Theme.RunningApp" />
+    <color name="icons_color">?attr/colorOnBackground</color>
 </resources>

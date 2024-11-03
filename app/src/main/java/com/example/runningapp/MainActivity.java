@@ -1,5 +1,6 @@
 package com.example.runningapp;
 
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     // Properties
     private int _secondsPassed = 0;
     private long _startTime = 0;
+    private int _steps = 0;
 
     private Handler _timerHandler = new Handler();
     private Runnable _timerRunnable = new Runnable() {
@@ -49,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
             _timeFullGauge.setValue(_secondsPassed);
 
             // Get steps
-            int steps = _stepHandler.GetStepsTaken();
-            _stepTextView.setText(String.valueOf((int)steps));
+            _steps = _stepHandler.GetStepsTaken();
+            _stepTextView.setText(String.valueOf(_steps));
 
             // Timer intervals
             _timerHandler.postDelayed(this, 500);
@@ -100,6 +102,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 StopTimer();
+            }
+        });
+
+        _viewRunDetailsExtendedFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Create run results activity
+                Intent resultsActivity = new Intent(MainActivity.this, RunReport.class);
+                resultsActivity.putExtra("steps", _steps);
+                resultsActivity.putExtra("timeTaken", _secondsPassed);
+
+                // Display activity
+                startActivity(resultsActivity);
             }
         });
     }
