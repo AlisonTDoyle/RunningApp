@@ -128,6 +128,13 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(resultsActivity);
             }
         });
+
+        _restartRunExtendedFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ResetTimer();
+            }
+        });
     }
 
     private void SetUpStepHandler() {
@@ -156,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
         // Update buttons status
         _startFab.setEnabled(false);
         _stopFab.setEnabled(true);
+        _viewRunDetailsExtendedFab.setEnabled(false);
         _restartRunExtendedFab.setEnabled(false);
     }
 
@@ -166,10 +174,12 @@ public class MainActivity extends AppCompatActivity {
         _startFab.setEnabled(true);
         _stopFab.setEnabled(false);
         _viewRunDetailsExtendedFab.setEnabled(true);
+        _restartRunExtendedFab.setEnabled(true);
     }
 
     private void ResetTimer() {
         _stepTextView.setText("0");
         _timerTextView.setText("0");
+        _timerProgressBar.setProgress(0);
     }
 }
